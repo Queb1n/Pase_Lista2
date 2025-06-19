@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tomar Pase</title>
+  <link rel="stylesheet" href="css/proflista.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Pase de Lista</h2>
+    <table border="1" style="width:100%; margin-top: 20px;">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Matrícula</th>
+          <th>Nombre</th>
+          <th>Apellido Paterno</th>
+          <th>Apellido Materno</th>
+          <th>Correo</th>
+          <th>Asistencia</th>
+        </tr>
+      </thead>
+      <tbody id="tablaPase"></tbody>
+    </table>
+    <br>
+    <button onclick="guardarPase()">Guardar Pase</button>
+    <button onclick="generarExcel()">Generar Excel</button>
+    <a href="profesor.html"><button>Volver</button></a>
+  </div>
+
+  <script src="js/datosSimulados.js"></script>
+  <script>
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    const materia = localStorage.getItem("materiaSeleccionada");
+    if (!usuario || usuario.rol !== "profesor" || !materia) location.href = "login.html";
+
+    const alumnos = usuariosSimulados.filter(u => u.rol === "alumno");
+    const tbody = document.getElementById("tablaPase");
+
+    alumnos.forEach(al => {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `
+        <td>${al.id_usuario}</td>
+        <td>${al.matricula}</td>
+        <td>${al.nombre}</td>
+        <td>${al.ape1}</td>
+        <td>${al.ape2 || ""}</td>
+        <td>${al.correo}</td>
+        <td>
+          <div class="asistencia-buttons">
+            <button class="btn-presente" onclick="marcarAsistencia(${al.id_usuario}, 'presente', this)">Asistencia</button>
+            <button class="btn-retardo" onclick="marcarAsistencia(${al.id_usuario}, 'retardo', this)">Retardo</button>
+            <button class="btn-falta" onclick="marcarAsistencia(${al.id_usuario}, 'falta', this)">Falta</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(fila);
+    });
+
+    function marcarAsistencia(id, tipo, elemento) {
+      // Remover clase activa de todos los botones en esta fila
+      const buttons = elemento.parentElement.querySelectorAll('button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      // Agregar clase activa al botón clickeado
+      elemento.classList.add('active');
+      
+      // Guardar el estado temporalmente en un atributo de datos
+      elemento.parentElement.dataset.estado = tipo;
+    }
+
+    function guardarPase() {
+      const filas = document.querySelectorAll(".asistencia-buttons");
+      const lista = Array.from(filas).map(fila => ({
+        id_usuario: parseInt(fila.closest('tr').querySelector('td').textContent),
+        estado: fila.dataset.estado || 'falta' // Por defecto falta si no se seleccionó
+      }));
+
+      let paseGlobal = JSON.parse(localStorage.getItem("pases") || "{}");
+      paseGlobal[materia] = lista;
+
+      localStorage.setItem("pases", JSON.stringify(paseGlobal));
+      alert("Pase guardado para " + materia);
+    }
+
+    function generarExcel() {
+      alert("Generando Excel solo para la materia: " + materia);
+    }
+  </script>
+</body>
+</html>
